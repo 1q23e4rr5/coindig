@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}📝create account in Crypto Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .register-box {
+        background: rgba(26, 35, 53, 0.8);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(42, 58, 90, 0.3);
+        border-radius: 24px;
+        padding: 40px 45px;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+        animation: fadeInUp 0.6s ease;
+    }
+    
+    .register-box h2 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 32px;
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .form-group {
+        margin-bottom: 14px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 10px 14px;
+        background: rgba(10, 14, 26, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
+        outline: none;
+    }
+    
+    .form-group .hint {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--accent-green), #00b894);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.4s;
+        font-family: 'Vazirmatn', sans-serif;
+        margin-top: 10px;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 212, 170, 0.3);
+    }
+    
+    .register-footer {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .register-footer a {
+        color: var(--accent-blue);
+        text-decoration: none;
+        font-weight: 700;
+    }
+    
+    .error-msg { color: var(--accent-red); text-align: center; margin-top: 12px; font-size: 13px; }
+    .success-msg { color: var(--accent-green); text-align: center; margin-top: 12px; font-size: 13px; }
+    
+    .badge {
+        display: inline-block;
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-right: 5px;
+    }
+    
+    /* ===== اصلاح: برچسب‌های درست ===== */
+    .badge-golden {
+        background: var(--gradient-gold);
+        color: #0a0e1a;
+    }
+    
+    .badge-normal {
+        background: var(--accent-blue);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-box">
+        <h2>📝 login </h2>
+        <p style="text-align:center; color:var(--text-secondary); font-size:14px; margin-bottom:25px;">
+            Every body cant Enter 
+        </p>
+        
+        <form id="registerForm" onsubmit="register(event)">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i>  User Name *</label>
+                <input type="text" id="regUsername" placeholder="Enter your User Name " required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i>  Password *</label>
+                <input type="password" id="regPassword" placeholder="Enter your password (minimume 4 chars)" required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user-tag"></i>  Full-Name</label>
+                <input type="text" id="regFullName" placeholder="Enter you full name ">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i>  E-mail</label>
+                <input type="email" id="regEmail" placeholder="Enter you E-mail (so just gmail)">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i>  Phone Number</label>
+                <input type="text" id="regPhone" placeholder="Enter you phone number ">
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-gift"></i> E-key
+                    <span class="badge badge-golden">Golden key => Permium account </span>
+                    <span class="badge badge-normal"> normal key => custom account</span>
+                </label>
+                <input type="text" id="regReferral" placeholder="Enter your key">
+                <div class="hint">
+
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-user-plus"></i> LOGIN
+            </button>
+            
+            <div id="registerError" class="error-msg"></div>
+            <div id="registerSuccess" class="success-msg"></div>
+        </form>
+        
+        <div class="register-footer">
+            <p style="color:var(--text-secondary); font-size:13px;">
+                 Do you have an account ?
+                <a href="{{ url_for('login_page') }}"> Enter </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function register(event) {
+        event.preventDefault();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value.trim();
+        const full_name = document.getElementById('regFullName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const referral_code = document.getElementById('regReferral').value.trim();
+        const errorEl = document.getElementById('registerError');
+        const successEl = document.getElementById('registerSuccess');
+
+        errorEl.textContent = '';
+        successEl.textContent = '';
+
+        if (!username || !password) {
+            errorEl.textContent = 'نام کاربری و رمز عبور الزامی است';
+            return;
+        }
+
+        if (password.length < 4) {
+            errorEl.textContent = 'رمز عبور باید حداقل ۴ کاراکتر باشد';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, full_name, email, phone, referral_code })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                if (result.direct) {
+                    successEl.innerHTML = `
+                        🎉 ثبت‌نام با موفقیت انجام شد!<br>
+                        نوع اکانت: <strong style="color:var(--accent-orange);">👑 اشرافی</strong><br>
+                        <a href="{{ url_for('login_page') }}" style="color:var(--accent-blue); text-decoration:none; font-weight:700;">
+                            <i class="fas fa-sign-in-alt"></i> وارد شوید
+                        </a>
+                    `;
+                } else {
+                    successEl.innerHTML = `
+                        ✅ ${result.message || 'درخواست شما ثبت شد'}<br>
+                        <span style="font-size:12px; color:var(--text-muted);">
+                            منتظر تایید ادمین باشید
+                        </span>
+                    `;
+                }
+                document.getElementById('registerForm').reset();
+            } else {
+                errorEl.textContent = result.error || 'خطا در ثبت‌نام';
+            }
+        } catch (error) {
+            errorEl.textContent = 'خطا در ارتباط با سرور';
+            console.error('Register error:', error);
+        }
+    }
+</script>
+{% endblock %}

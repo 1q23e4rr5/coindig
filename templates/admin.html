@@ -1,0 +1,1450 @@
+{% extends "base.html" %}
+
+{% block title %}👑 Crypto Pro Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+        padding: 25px;
+        background: rgba(26, 35, 53, 0.8);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+    
+    .admin-header .header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .admin-header .header-left h2 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+    }
+    
+    .admin-header .header-left h2 i {
+        color: var(--accent-orange);
+        font-size: 28px;
+    }
+    
+    .admin-header .header-left .subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .admin-header .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    
+    .live-time {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 18px;
+        background: var(--bg-primary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        font-family: monospace;
+        font-size: 16px;
+        color: var(--accent-blue);
+        direction: ltr;
+    }
+    
+    .live-time .time-icon {
+        color: var(--accent-green);
+        font-size: 14px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    
+    .admin-header .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .admin-section {
+        background: rgba(26, 35, 53, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow);
+        transition: all 0.3s;
+    }
+    
+    .admin-section:hover {
+        border-color: rgba(88, 166, 255, 0.2);
+    }
+    
+    .admin-section .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .admin-section .section-header h3 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 20px;
+        font-weight: 700;
+    }
+    
+    .admin-section .section-header h3 i {
+        color: var(--accent-orange);
+    }
+    
+    .admin-section .section-header .badge-count {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        color: white;
+    }
+    
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    
+    .admin-table th {
+        background: var(--bg-primary);
+        padding: 12px 16px;
+        text-align: right;
+        font-weight: 700;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+    }
+    
+    .admin-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+    
+    .admin-table tr:hover {
+        background: var(--bg-card-hover);
+    }
+    
+    .status-badge {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .status-badge.active { background: rgba(0, 212, 170, 0.15); color: var(--accent-green); }
+    .status-badge.blocked { background: rgba(255, 107, 107, 0.15); color: var(--accent-red); }
+    .status-badge.pending { background: rgba(255, 169, 77, 0.15); color: var(--accent-orange); }
+    .status-badge.approved { background: rgba(0, 212, 170, 0.15); color: var(--accent-green); }
+    .status-badge.rejected { background: rgba(255, 107, 107, 0.15); color: var(--accent-red); }
+    .status-badge.premium { background: var(--gradient-gold); color: #0a0e1a; }
+    .status-badge.custom { background: var(--accent-blue); color: white; }
+    .status-badge.simple { background: var(--text-muted); color: white; }
+    
+    .admin-actions {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-sm {
+        padding: 5px 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: 'Vazirmatn', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+    
+    .btn-sm:hover { transform: scale(1.05); }
+    .btn-sm.approve { background: var(--accent-green); color: white; }
+    .btn-sm.reject { background: var(--accent-red); color: white; }
+    .btn-sm.edit { background: var(--accent-blue); color: white; }
+    .btn-sm.block { background: var(--accent-red); color: white; }
+    .btn-sm.unblock { background: var(--accent-green); color: white; }
+    .btn-sm.delete { background: #ff4444; color: white; }
+    .btn-sm.upgrade { background: var(--gradient-gold); color: #0a0e1a; }
+    .btn-sm.password { background: #8b5cf6; color: white; }
+    .btn-sm.view { background: #06b6d4; color: white; }
+    .btn-sm.reset { background: #f59e0b; color: white; }
+    .btn-sm.reply { background: #10b981; color: white; }
+    
+    .config-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .config-grid .full-width {
+        grid-column: span 2;
+    }
+    
+    .config-group {
+        margin-bottom: 5px;
+    }
+    
+    .config-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .config-group label i {
+        margin-left: 6px;
+    }
+    
+    .config-group input,
+    .config-group select,
+    .config-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        transition: all 0.3s;
+    }
+    
+    .config-group input:focus,
+    .config-group select:focus,
+    .config-group textarea:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
+        outline: none;
+    }
+    
+    .config-group textarea {
+        resize: vertical;
+        min-height: 120px;
+        font-size: 13px;
+        line-height: 1.8;
+    }
+    
+    .config-group .hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+    
+    .config-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+    }
+    
+    .config-actions .btn-primary {
+        flex: 1;
+        justify-content: center;
+        padding: 12px 20px;
+    }
+    
+    .test-result {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        display: none;
+    }
+    
+    .test-result.show {
+        display: block;
+        animation: fadeInUp 0.3s ease;
+    }
+    
+    .test-result .success {
+        color: var(--accent-green);
+    }
+    
+    .test-result .error {
+        color: var(--accent-red);
+    }
+    
+    .test-result .response-box {
+        margin-top: 10px;
+        padding: 12px;
+        background: var(--bg-card);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .test-result .response-box .label {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    
+    .test-result .response-box .text {
+        font-size: 14px;
+        color: var(--text-primary);
+        padding: 8px;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        margin-top: 3px;
+        line-height: 1.8;
+    }
+    
+    .test-result .response-box .meta {
+        display: flex;
+        gap: 15px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-muted);
+        flex-wrap: wrap;
+    }
+    
+    .referral-code-item {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 14px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+    }
+    
+    .referral-code-item:hover {
+        border-color: var(--accent-blue);
+    }
+    
+    .referral-code-item .code {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--accent-orange);
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+    
+    .referral-code-item .type-badge {
+        padding: 3px 14px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    
+    .referral-code-item .type-badge.golden {
+        background: var(--gradient-gold);
+        color: #0a0e1a;
+    }
+    
+    .referral-code-item .type-badge.normal {
+        background: var(--accent-blue);
+        color: white;
+    }
+    
+    .referral-code-actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .message-form textarea {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        resize: vertical;
+        min-height: 100px;
+        transition: all 0.3s;
+    }
+    
+    .message-form textarea:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
+        outline: none;
+    }
+    
+    .message-form .target-select {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        margin-bottom: 10px;
+    }
+    
+    .message-form .target-select:focus {
+        border-color: var(--accent-blue);
+        outline: none;
+    }
+    
+    .message-form .target-input {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        margin-bottom: 10px;
+        display: none;
+    }
+    
+    .message-form .target-input.show {
+        display: block;
+    }
+    
+    .password-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .password-modal.active {
+        display: flex;
+    }
+    
+    .password-modal-content {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 30px 40px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: var(--shadow);
+        animation: fadeInUp 0.3s ease;
+    }
+    
+    .password-modal-content h3 {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .password-modal-content .hash-box {
+        background: var(--bg-primary);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-all;
+        margin: 10px 0;
+        color: var(--accent-orange);
+    }
+    
+    .password-modal-content .btn-close-modal {
+        margin-top: 15px;
+        padding: 10px 25px;
+        background: var(--accent-red);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: 'Vazirmatn', sans-serif;
+        font-weight: 700;
+        transition: all 0.3s;
+    }
+    
+    .password-modal-content .btn-close-modal:hover {
+        transform: scale(1.05);
+    }
+    
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .loading-row {
+        text-align: center;
+        padding: 40px !important;
+        color: var(--text-secondary);
+    }
+    
+    .loading-row i {
+        margin-left: 10px;
+        color: var(--accent-blue);
+    }
+    
+    @media (max-width: 992px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+        }
+        .config-grid .full-width {
+            grid-column: span 1;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .grid-2 { grid-template-columns: 1fr; }
+        .admin-header { flex-direction: column; align-items: stretch; }
+        .admin-header .header-right { align-items: stretch; }
+        .admin-table { font-size: 12px; }
+        .admin-table th, .admin-table td { padding: 8px 10px; }
+        .admin-actions { gap: 3px; }
+        .btn-sm { font-size: 10px; padding: 3px 8px; }
+        .live-time { font-size: 13px; padding: 6px 12px; }
+        .config-actions { flex-direction: column; }
+    }
+    
+    @media (max-width: 480px) {
+        .admin-header .header-left h2 { font-size: 18px; }
+        .admin-section { padding: 15px; }
+        .referral-code-item { flex-direction: column; align-items: stretch; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <div class="header-left">
+            <h2>
+                <i class="fas fa-crown"></i>
+                <span>Admin Panel</span>
+                <span style="font-size:14px; background:var(--accent-blue); color:white; padding:2px 12px; border-radius:20px; font-weight:400;">v2.0</span>
+            </h2>
+            <div class="subtitle">
+                <i class="fas fa-users"></i> Manage Users, Requests, API Settings & Referral System
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="live-time">
+                <span class="time-icon"><i class="fas fa-circle"></i></span>
+                <span id="liveDateTime">Loading...</span>
+            </div>
+            <div class="header-actions">
+                <a href="/" class="btn-primary" style="padding:8px 16px; font-size:13px;">
+                    <i class="fas fa-home"></i> Back
+                </a>
+                <button class="btn-primary" onclick="window.location.reload()" style="padding:8px 16px; font-size:13px;">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section 1: API Settings -->
+    <div class="admin-section" style="border-color: rgba(88, 166, 255, 0.3);">
+        <div class="section-header">
+            <h3><i class="fas fa-sliders-h" style="color:var(--accent-blue);"></i> API & Prompt Settings</h3>
+            <span class="badge-count" style="background:var(--accent-blue);">
+                <i class="fas fa-edit"></i> Editable
+            </span>
+        </div>
+        
+        <form id="configForm" onsubmit="updateConfig(event)">
+            <div class="config-grid">
+                <div class="config-group full-width">
+                    <label><i class="fas fa-key" style="color:var(--accent-orange);"></i> API Key</label>
+                    <input type="text" id="configApiKey" placeholder="sk-... Enter your API key" style="font-family:monospace; direction:ltr;">
+                    <div class="hint"><i class="fas fa-info-circle"></i> Get your API key from your provider</div>
+                </div>
+                
+                <div class="config-group">
+                    <label><i class="fas fa-link" style="color:var(--accent-blue);"></i> Base URL</label>
+                    <input type="text" id="configBaseUrl" placeholder="https://api.gapgpt.app/v1" style="font-family:monospace; direction:ltr;">
+                    <div class="hint"><i class="fas fa-info-circle"></i> API base URL</div>
+                </div>
+                
+                <div class="config-group">
+                    <label><i class="fas fa-microchip" style="color:var(--accent-purple);"></i> Model</label>
+                    <select id="configModel">
+                        <option value="gpt-4o-mini">GPT-4o-mini (Fast & Cost-effective)</option>
+                        <option value="gpt-4o">GPT-4o (Advanced)</option>
+                        <option value="gpt-4-turbo">GPT-4-turbo</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5-turbo</option>
+                        <option value="claude-3-opus">Claude 3 Opus</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="llama-3-70b">Llama 3 70B</option>
+                        <option value="llama-3-8b">Llama 3 8B</option>
+                    </select>
+                    <div class="hint"><i class="fas fa-info-circle"></i> Model for analysis</div>
+                </div>
+                
+                <div class="config-group full-width">
+                    <label><i class="fas fa-brain" style="color:var(--accent-pink);"></i> System Prompt</label>
+                    <textarea id="configSystemPrompt" rows="6" placeholder="Enter system prompt..."></textarea>
+                    <div class="hint">
+                        <i class="fas fa-info-circle"></i> 
+                        This prompt tells the AI how to analyze. The more precise, the better the responses.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+                <button type="button" class="btn-primary btn-success" onclick="testAPI()">
+                    <i class="fas fa-vial"></i> Test API (Send Hello)
+                </button>
+                <button type="button" class="btn-primary btn-warning" onclick="resetConfig()" style="background:var(--accent-orange);">
+                    <i class="fas fa-undo"></i> Reset to Default
+                </button>
+            </div>
+        </form>
+        
+        <div id="testResult" class="test-result">
+            <div id="testResultContent"></div>
+        </div>
+    </div>
+    
+    <!-- Section 2: Requests -->
+    <div class="admin-section">
+        <div class="section-header">
+            <h3><i class="fas fa-clock"></i> Registration Requests</h3>
+            <span class="badge-count" id="requestsCount" style="background:var(--accent-orange);">
+                <i class="fas fa-hourglass-half"></i> <span id="requestsCountNumber">0</span>
+            </span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table" id="requestsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Requested Type</th>
+                        <th>Referral Code</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="8" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Section 3: Users -->
+    <div class="admin-section">
+        <div class="section-header">
+            <h3><i class="fas fa-users"></i> User Management</h3>
+            <span class="badge-count" style="background:var(--accent-green);">
+                <i class="fas fa-user-check"></i> <span id="usersCount">0</span>
+            </span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Account Type</th>
+                        <th>Status</th>
+                        <th>Join Date</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="7" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Section 4: Referral Codes & Messages -->
+    <div class="grid-2">
+        <div class="admin-section">
+            <div class="section-header">
+                <h3><i class="fas fa-gift"></i> Referral Codes</h3>
+                <span class="badge-count" style="background:var(--accent-purple);">
+                    <i class="fas fa-tags"></i> <span id="codesCount">0</span>
+                </span>
+            </div>
+            <div id="referralCodesList">
+                <div style="text-align:center; color:var(--text-secondary); padding:20px;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+            <div class="referral-code-actions">
+                <button class="btn-primary btn-gold" onclick="createReferralCode('golden')">
+                    <i class="fas fa-crown"></i> Golden Code
+                </button>
+                <button class="btn-primary" onclick="createReferralCode('normal')">
+                    <i class="fas fa-tag"></i> Normal Code
+                </button>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <div class="section-header">
+                <h3><i class="fas fa-bullhorn"></i> Send Message</h3>
+                <span class="badge-count" style="background:var(--accent-pink);">
+                    <i class="fas fa-envelope"></i> Notification
+                </span>
+            </div>
+            <form class="message-form" id="messageForm" onsubmit="sendAdminMessage(event)">
+                <select id="targetUser" class="target-select" onchange="toggleTargetInput()">
+                    <option value="all">📢 All Users</option>
+                    <option value="premium">👑 Premium Users</option>
+                    <option value="custom">⭐ Custom Users</option>
+                    <option value="simple">📌 Simple Users</option>
+                    <option value="specific">👤 Specific User (enter)</option>
+                </select>
+                <input type="text" id="specificUserInput" class="target-input" placeholder="Enter username...">
+                <textarea id="adminMessage" placeholder="Enter your message..." required></textarea>
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:10px;">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Section 5: User Messages -->
+    <div class="admin-section">
+        <div class="section-header">
+            <h3><i class="fas fa-inbox" style="color:var(--accent-pink);"></i> User Messages</h3>
+            <span class="badge-count" style="background:var(--accent-pink);">
+                <i class="fas fa-envelope"></i> <span id="userMessagesCount">0</span>
+            </span>
+        </div>
+        <div style="overflow-x:auto; max-height:400px; overflow-y:auto;">
+            <table class="admin-table" id="userMessagesTable">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Account Type</th>
+                        <th>Message</th>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userMessagesBody">
+                    <tr><td colspan="5" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="password-modal" id="passwordModal">
+    <div class="password-modal-content">
+        <h3><i class="fas fa-key" style="color:var(--accent-orange);"></i> User Password</h3>
+        <p style="color:var(--text-secondary); font-size:14px;">Username: <strong id="modalUsername" style="color:var(--text-primary);"></strong></p>
+        <p style="color:var(--text-muted); font-size:12px; margin-top:5px;">Password stored as hash (SHA-256):</p>
+        <div class="hash-box" id="modalPasswordHash">-</div>
+        <p style="color:var(--text-muted); font-size:11px; margin-top:5px;">
+            <i class="fas fa-info-circle"></i> This hash cannot be reversed to the original password. Use the 🔑 button to change password.
+        </p>
+        <button class="btn-close-modal" onclick="closePasswordModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    // Live time
+    function updateLiveTime() {
+        const now = new Date();
+        const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+        const persianDate = now.toLocaleDateString('fa-IR', options);
+        document.getElementById('liveDateTime').textContent = persianDate;
+    }
+    updateLiveTime();
+    setInterval(updateLiveTime, 1000);
+
+    function toggleTargetInput() {
+        const select = document.getElementById('targetUser');
+        const input = document.getElementById('specificUserInput');
+        if (select.value === 'specific') {
+            input.classList.add('show');
+            input.required = true;
+        } else {
+            input.classList.remove('show');
+            input.required = false;
+        }
+    }
+
+    // ========================================
+    // LOAD CONFIG
+    // ========================================
+    async function loadConfig() {
+        try {
+            const response = await fetch('/api/admin/config');
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('configApiKey').value = data.api_key || '';
+                document.getElementById('configBaseUrl').value = data.base_url || '';
+                document.getElementById('configModel').value = data.model || 'gpt-4o-mini';
+                document.getElementById('configSystemPrompt').value = data.system_prompt || '';
+            }
+        } catch (error) {
+            console.error('Load config error:', error);
+        }
+    }
+
+    // ========================================
+    // UPDATE CONFIG
+    // ========================================
+    async function updateConfig(event) {
+        event.preventDefault();
+        const config = {
+            api_key: document.getElementById('configApiKey').value.trim(),
+            base_url: document.getElementById('configBaseUrl').value.trim(),
+            model: document.getElementById('configModel').value,
+            system_prompt: document.getElementById('configSystemPrompt').value.trim()
+        };
+        if (!config.api_key) {
+            alert('⚠️ Please enter your API key');
+            return;
+        }
+        if (!config.base_url) {
+            alert('⚠️ Please enter the Base URL');
+            return;
+        }
+        try {
+            const response = await fetch('/api/admin/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert('✅ Settings saved successfully!');
+                const resultDiv = document.getElementById('testResult');
+                resultDiv.className = 'test-result show';
+                document.getElementById('testResultContent').innerHTML = `
+                    <div class="success"><i class="fas fa-check-circle"></i> Settings saved</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:5px;">
+                        Model: ${config.model} | Base URL: ${config.base_url}
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">
+                        API Key: ${config.api_key.substring(0,8)}...${config.api_key.substring(config.api_key.length - 4)}
+                    </div>
+                `;
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error saving settings'));
+            }
+        } catch (error) {
+            console.error('Update config error:', error);
+            alert('❌ Server communication error');
+        }
+    }
+
+    // ========================================
+    // RESET CONFIG
+    // ========================================
+    async function resetConfig() {
+        if (!confirm('Are you sure you want to reset to default settings?')) return;
+        const defaultConfig = {
+            api_key: 'sk-1YvH8QE5sTBq7nKer6dKzYHCHiLBMlQmirM0jq6hYH4f5HaH',
+            base_url: 'https://api.gapgpt.app/v1',
+            model: 'gpt-4o-mini',
+            system_prompt: 'You are a senior analyst with over 15 years of experience in financial markets.\n\n**Critical Instructions:**\n1. Based on the provided data, recommend cryptocurrencies with over 90% profitability potential.\n2. Categorize currencies into exactly 5 categories:\n   - Category 1: Profitable in the next 24 hours (5-15% profit)\n   - Category 2: Profitable in the next week (15-30% profit)\n   - Category 3: Profitable in the next month (30-50% profit)\n   - Category 4: Profitable in the next six months (50-100% profit)\n   - Category 5: Profitable in the next year (over 100% profit)\n\n3. Provide a detailed reason for each selection with supporting evidence.\n4. Write the response in Persian with organized structure and proper paragraphing.\n5. Response must be at least 500 words.'
+        };
+        try {
+            const response = await fetch('/api/admin/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(defaultConfig)
+            });
+            if (response.ok) {
+                await loadConfig();
+                alert('✅ Settings reset to default!');
+            }
+        } catch (error) {
+            console.error('Reset config error:', error);
+            alert('❌ Error resetting to default');
+        }
+    }
+
+    // ========================================
+    // TEST API
+    // ========================================
+    async function testAPI() {
+        const resultDiv = document.getElementById('testResult');
+        const contentDiv = document.getElementById('testResultContent');
+        resultDiv.className = 'test-result show';
+        contentDiv.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; color:var(--text-secondary);">
+                <i class="fas fa-spinner fa-spin"></i> <span>Sending request to API...</span>
+            </div>
+        `;
+        try {
+            const response = await fetch('/api/admin/test-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                contentDiv.innerHTML = `
+                    <div class="success"><i class="fas fa-check-circle"></i> ✅ API is working successfully!</div>
+                    <div class="response-box">
+                        <div class="label">📨 Message sent:</div>
+                        <div style="font-size:13px; color:var(--text-secondary); margin:5px 0;">"Hello, this is a test message..."</div>
+                        <div class="label" style="margin-top:8px;">🤖 AI Response:</div>
+                        <div class="text">${result.response || 'No response received'}</div>
+                        <div class="meta">
+                            <span><i class="fas fa-clock"></i> Response time: ${result.elapsed_ms || 0}ms</span>
+                            <span><i class="fas fa-microchip"></i> Model: ${result.model || 'N/A'}</span>
+                            <span><i class="fas fa-link"></i> Base URL: ${result.config?.base_url || 'N/A'}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                contentDiv.innerHTML = `
+                    <div class="error"><i class="fas fa-times-circle"></i> ❌ API connection error</div>
+                    <div class="response-box">
+                        <div style="font-size:13px; color:var(--accent-red);">${result.error || 'Unknown error'}</div>
+                        ${result.status_code ? `<div style="font-size:12px; color:var(--text-muted); margin-top:5px;">Status: ${result.status_code}</div>` : ''}
+                        <div style="margin-top:8px; font-size:12px; color:var(--text-muted);">
+                            <i class="fas fa-lightbulb"></i> Tips:
+                            <ul style="margin:5px 0 0 15px; padding-right:15px; list-style:disc;">
+                                <li>Check your API key</li>
+                                <li>Check your Base URL</li>
+                                <li>Check your internet connection</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            contentDiv.innerHTML = `
+                <div class="error"><i class="fas fa-exclamation-triangle"></i> ❌ Server connection error</div>
+                <div style="margin-top:10px; font-size:13px; color:var(--text-secondary);">${error.message}</div>
+            `;
+        }
+    }
+
+    // ========================================
+    // LOAD REQUESTS
+    // ========================================
+    async function loadRequests() {
+        try {
+            const response = await fetch('/api/admin/requests');
+            const data = await response.json();
+            if (response.ok && data.requests) {
+                renderRequests(data.requests);
+                document.getElementById('requestsCountNumber').textContent = data.requests.length;
+            }
+        } catch (error) {
+            console.error('Load requests error:', error);
+        }
+    }
+
+    function renderRequests(requests) {
+        if (!requests || requests.length === 0) {
+            document.getElementById('requestsTableBody').innerHTML = `
+                <tr><td colspan="8" class="loading-row"><i class="fas fa-check-circle" style="color:var(--accent-green);"></i> No requests available</td></tr>
+            `;
+            return;
+        }
+        let html = '';
+        requests.forEach((req, index) => {
+            const statusClass = req.status === 'pending' ? 'pending' : req.status;
+            const isPinned = req.is_pinned ? ' 📌' : '';
+            const typeClass = req.requested_user_type === 'premium' ? 'premium' : req.requested_user_type === 'custom' ? 'custom' : 'simple';
+            const typeLabel = req.requested_user_type === 'premium' ? '👑 Premium' : req.requested_user_type === 'custom' ? '⭐ Custom' : 'Simple';
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${req.username}</strong></td>
+                    <td>${req.full_name || '-'}</td>
+                    <td><span class="status-badge ${typeClass}">${typeLabel}</span></td>
+                    <td>${req.referral_code || '-'}</td>
+                    <td><span class="status-badge ${statusClass}">${req.status === 'pending' ? 'Pending' + isPinned : req.status}</span></td>
+                    <td>${new Date(req.created_at).toLocaleDateString('fa-IR')}</td>
+                    <td>
+                        <div class="admin-actions">
+                            <button class="btn-sm approve" onclick="approveRequest(${req.id})"><i class="fas fa-check"></i></button>
+                            <button class="btn-sm edit" onclick="editRequest(${req.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn-sm reject" onclick="rejectRequest(${req.id})"><i class="fas fa-times"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('requestsTableBody').innerHTML = html;
+    }
+
+    async function approveRequest(id) {
+        if (!confirm('Approve this request?')) return;
+        try {
+            const response = await fetch(`/api/admin/requests/${id}/approve`, { method: 'POST' });
+            if (response.ok) { await loadRequests(); await loadUsers(); }
+        } catch (error) { console.error('Approve error:', error); }
+    }
+
+    async function rejectRequest(id) {
+        if (!confirm('Reject this request?')) return;
+        try {
+            const response = await fetch(`/api/admin/requests/${id}/reject`, { method: 'POST' });
+            if (response.ok) { await loadRequests(); }
+        } catch (error) { console.error('Reject error:', error); }
+    }
+
+    async function editRequest(id) {
+        const newType = prompt('Account Type:\n1. simple\n2. custom\n3. premium', 'simple');
+        if (!newType) return;
+        const userType = newType === 'premium' ? 'premium' : newType === 'custom' ? 'custom' : 'simple';
+        try {
+            const response = await fetch(`/api/admin/requests/${id}/edit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_type: userType })
+            });
+            if (response.ok) { await loadRequests(); }
+        } catch (error) { console.error('Edit error:', error); }
+    }
+
+    // ========================================
+    // LOAD USERS
+    // ========================================
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/admin/users');
+            const data = await response.json();
+            if (response.ok && data.users) {
+                renderUsers(data.users);
+                document.getElementById('usersCount').textContent = data.users.length;
+            }
+        } catch (error) {
+            console.error('Load users error:', error);
+        }
+    }
+
+    function renderUsers(users) {
+        if (!users || users.length === 0) {
+            document.getElementById('usersTableBody').innerHTML = `
+                <tr><td colspan="7" class="loading-row">No users found</td></tr>
+            `;
+            return;
+        }
+        let html = '';
+        users.forEach(user => {
+            const statusClass = user.status === 'active' ? 'active' : 'blocked';
+            const typeClass = user.user_type === 'premium' ? 'premium' : user.user_type === 'custom' ? 'custom' : 'simple';
+            const typeLabel = user.user_type === 'premium' ? '👑 Premium' : user.user_type === 'custom' ? '⭐ Custom' : 'Simple';
+            html += `
+                <tr>
+                    <td><strong>${user.username}</strong> ${user.role === 'admin' ? '👑' : ''}</td>
+                    <td>${user.full_name || '-'}</td>
+                    <td><span class="status-badge ${typeClass}">${typeLabel}</span></td>
+                    <td><span class="status-badge ${statusClass}">${user.status === 'active' ? 'Active' : 'Blocked'}</span></td>
+                    <td>${user.created_at ? new Date(user.created_at).toLocaleDateString('fa-IR') : '-'}</td>
+                    <td>${user.last_login ? new Date(user.last_login).toLocaleDateString('fa-IR') : '-'}</td>
+                    <td>
+                        <div class="admin-actions">
+                            ${user.username !== 'admin' ? `
+                                <button class="btn-sm view" onclick="showPassword('${user.username}')" title="Show Password"><i class="fas fa-eye"></i></button>
+                                <button class="btn-sm password" onclick="changePassword('${user.username}')" title="Change Password"><i class="fas fa-key"></i></button>
+                                <button class="btn-sm upgrade" onclick="changeUserType('${user.username}')" title="Change Type"><i class="fas fa-crown"></i></button>
+                                ${user.status === 'active' ? 
+                                    `<button class="btn-sm block" onclick="blockUser('${user.username}')" title="Block"><i class="fas fa-ban"></i></button>` :
+                                    `<button class="btn-sm unblock" onclick="unblockUser('${user.username}')" title="Unblock"><i class="fas fa-check"></i></button>`
+                                }
+                                <button class="btn-sm delete" onclick="deleteUser('${user.username}')" title="Delete"><i class="fas fa-trash"></i></button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('usersTableBody').innerHTML = html;
+    }
+
+    async function changeUserType(username) {
+        const currentType = prompt('New Account Type:\n1. simple\n2. custom\n3. premium', 'premium');
+        if (!currentType) return;
+        const newType = currentType === 'premium' ? 'premium' : currentType === 'custom' ? 'custom' : 'simple';
+        try {
+            const response = await fetch(`/api/admin/users/${username}/change-type`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_type: newType })
+            });
+            if (response.ok) {
+                await loadUsers();
+                alert(`Account type for ${username} changed to ${newType === 'premium' ? 'Premium' : newType === 'custom' ? 'Custom' : 'Simple'}`);
+            }
+        } catch (error) { console.error('Change type error:', error); }
+    }
+
+    async function blockUser(username) {
+        if (!confirm(`Block ${username}?`)) return;
+        try {
+            const response = await fetch(`/api/admin/users/${username}/block`, { method: 'POST' });
+            if (response.ok) await loadUsers();
+        } catch (error) { console.error('Block error:', error); }
+    }
+
+    async function unblockUser(username) {
+        try {
+            const response = await fetch(`/api/admin/users/${username}/unblock`, { method: 'POST' });
+            if (response.ok) await loadUsers();
+        } catch (error) { console.error('Unblock error:', error); }
+    }
+
+    async function deleteUser(username) {
+        if (!confirm(`Delete ${username}? This action is irreversible!`)) return;
+        try {
+            const response = await fetch(`/api/admin/users/${username}/delete`, { method: 'DELETE' });
+            if (response.ok) await loadUsers();
+        } catch (error) { console.error('Delete error:', error); }
+    }
+
+    function showPassword(username) {
+        document.getElementById('modalUsername').textContent = username;
+        document.getElementById('modalPasswordHash').textContent = 'Loading...';
+        document.getElementById('passwordModal').classList.add('active');
+        fetch(`/api/admin/users/${username}/password`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.password) {
+                    document.getElementById('modalPasswordHash').textContent = data.password;
+                } else {
+                    document.getElementById('modalPasswordHash').textContent = '❌ ' + (data.error || 'Error');
+                }
+            })
+            .catch(error => {
+                document.getElementById('modalPasswordHash').textContent = '❌ Error retrieving';
+                console.error('Show password error:', error);
+            });
+    }
+
+    function closePasswordModal() {
+        document.getElementById('passwordModal').classList.remove('active');
+    }
+
+    document.getElementById('passwordModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePasswordModal();
+        }
+    });
+
+    async function changePassword(username) {
+        const newPassword = prompt(`Enter new password for user "${username}":`, '');
+        if (!newPassword || newPassword.length < 4) {
+            alert('⚠️ Password must be at least 4 characters');
+            return;
+        }
+        if (!confirm(`Are you sure you want to change password for "${username}" to "${newPassword}"?`)) {
+            return;
+        }
+        try {
+            const response = await fetch(`/api/admin/users/${username}/password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: newPassword })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert(`✅ Password for "${username}" changed successfully!`);
+                await loadUsers();
+            } else {
+                alert(data.error || 'Error changing password');
+            }
+        } catch (error) {
+            console.error('Change password error:', error);
+            alert('Server communication error');
+        }
+    }
+
+    // ========================================
+    // REFERRAL CODES
+    // ========================================
+    async function loadReferralCodes() {
+        try {
+            const response = await fetch('/api/admin/referral-codes');
+            const data = await response.json();
+            if (response.ok && data.codes) {
+                renderReferralCodes(data.codes);
+                document.getElementById('codesCount').textContent = data.codes.length;
+            }
+        } catch (error) {
+            console.error('Load referral codes error:', error);
+        }
+    }
+
+    function renderReferralCodes(codes) {
+        const container = document.getElementById('referralCodesList');
+        if (!codes || codes.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; color:var(--text-secondary); padding:20px;">
+                    <i class="fas fa-gift" style="font-size:36px; display:block; margin-bottom:10px;"></i>
+                    <p>No referral codes created</p>
+                </div>
+            `;
+            return;
+        }
+        let html = '';
+        codes.forEach(code => {
+            const typeClass = code.type === 'golden' ? 'golden' : 'normal';
+            const typeLabel = code.type === 'golden' ? '👑 Golden' : 'Normal';
+            const statusText = code.is_active == 1 ? 'Active' : 'Inactive';
+            const statusColor = code.is_active == 1 ? 'var(--accent-green)' : 'var(--accent-red)';
+            html += `
+                <div class="referral-code-item">
+                    <div>
+                        <span class="code">${code.code}</span>
+                        <span class="type-badge ${typeClass}">${typeLabel}</span>
+                        <span style="font-size:12px; color:var(--text-muted); margin-right:10px;">
+                            Used: ${code.uses || 0}/${code.max_uses || 5}
+                        </span>
+                        <span style="font-size:12px; color:${statusColor};">
+                            ● ${statusText}
+                        </span>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn-sm ${code.is_active == 1 ? 'block' : 'unblock'}" onclick="toggleReferralCode('${code.code}')">
+                            ${code.is_active == 1 ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button class="btn-sm delete" onclick="deleteReferralCode('${code.code}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    async function createReferralCode(type) {
+        try {
+            const response = await fetch('/api/admin/referral-codes/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: type })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                await loadReferralCodes();
+                alert(`✅ ${type === 'golden' ? 'Golden' : 'Normal'} referral code created!\nCode: ${data.code}`);
+            }
+        } catch (error) { console.error('Create referral code error:', error); }
+    }
+
+    async function toggleReferralCode(code) {
+        try {
+            const response = await fetch(`/api/admin/referral-codes/${code}/toggle`, { method: 'POST' });
+            if (response.ok) await loadReferralCodes();
+        } catch (error) { console.error('Toggle error:', error); }
+    }
+
+    async function deleteReferralCode(code) {
+        if (!confirm(`Delete code ${code}?`)) return;
+        try {
+            const response = await fetch(`/api/admin/referral-codes/${code}/delete`, { method: 'DELETE' });
+            if (response.ok) await loadReferralCodes();
+        } catch (error) { console.error('Delete error:', error); }
+    }
+
+    // ========================================
+    // SEND ADMIN MESSAGE
+    // ========================================
+    async function sendAdminMessage(event) {
+        event.preventDefault();
+        const message = document.getElementById('adminMessage').value.trim();
+        const targetSelect = document.getElementById('targetUser');
+        let target = targetSelect.value;
+        
+        if (target === 'specific') {
+            target = document.getElementById('specificUserInput').value.trim();
+            if (!target) {
+                alert('⚠️ Please enter a username');
+                return;
+            }
+        }
+
+        if (!message) {
+            alert('⚠️ Please enter a message');
+            return;
+        }
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            const response = await fetch('/api/admin/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    target_user: target
+                })
+            });
+
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert(result.message || '✅ Message sent successfully');
+                document.getElementById('adminMessage').value = '';
+                document.getElementById('specificUserInput').value = '';
+                await loadUserMessages();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error sending message'));
+            }
+        } catch (error) {
+            console.error('Send message error:', error);
+            alert('❌ Server communication error. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        }
+    }
+
+    // ========================================
+    // USER MESSAGES
+    // ========================================
+    async function loadUserMessages() {
+        try {
+            const response = await fetch('/api/admin/user-messages');
+            const data = await response.json();
+            if (response.ok && data.messages) {
+                renderUserMessages(data.messages);
+                document.getElementById('userMessagesCount').textContent = data.messages.length || 0;
+            }
+        } catch (error) {
+            console.error('Load user messages error:', error);
+        }
+    }
+
+    function renderUserMessages(messages) {
+        if (!messages || messages.length === 0) {
+            document.getElementById('userMessagesBody').innerHTML = `
+                <tr><td colspan="5" class="loading-row">
+                    <i class="fas fa-check-circle" style="color:var(--accent-green);"></i> No messages
+                </td></tr>
+            `;
+            return;
+        }
+        let html = '';
+        messages.forEach(msg => {
+            const typeClass = msg.user_type === 'premium' ? 'premium' : msg.user_type === 'custom' ? 'custom' : 'simple';
+            const typeLabel = msg.user_type === 'premium' ? '👑 Premium' : msg.user_type === 'custom' ? '⭐ Custom' : 'Simple';
+            const isFromUser = msg.from_admin == 0;
+            html += `
+                <tr>
+                    <td><strong>${msg.username}</strong></td>
+                    <td><span class="status-badge ${typeClass}">${typeLabel}</span></td>
+                    <td style="max-width:300px; word-break:break-word;">${msg.message}</td>
+                    <td>${new Date(msg.created_at).toLocaleString('fa-IR')}</td>
+                    <td>
+                        <div class="admin-actions">
+                            ${isFromUser ? `
+                                <button class="btn-sm reply" onclick="replyToUser('${msg.username}')">
+                                    <i class="fas fa-reply"></i> Reply
+                                </button>
+                            ` : `<span style="color:var(--text-muted); font-size:11px;">Replied</span>`}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('userMessagesBody').innerHTML = html;
+    }
+
+    async function replyToUser(username) {
+        const reply = prompt(`Reply to ${username}:`, '');
+        if (!reply) return;
+        if (!confirm(`Are you sure you want to reply to "${username}"?`)) return;
+        try {
+            const response = await fetch('/api/admin/reply-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target_user: username,
+                    message: reply
+                })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert('✅ Reply sent successfully');
+                await loadUserMessages();
+            } else {
+                alert(data.error || 'Error sending reply');
+            }
+        } catch (error) {
+            console.error('Reply error:', error);
+            alert('Server communication error');
+        }
+    }
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    loadConfig();
+    loadRequests();
+    loadUsers();
+    loadReferralCodes();
+    loadUserMessages();
+
+    setInterval(() => {
+        loadRequests();
+        loadUsers();
+        loadUserMessages();
+    }, 30000);
+
+    console.log('👑 Admin Panel loaded successfully!');
+    console.log('🕐 Live time is active');
+</script>
+{% endblock %}

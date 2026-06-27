@@ -1,0 +1,1725 @@
+{% extends "base.html" %}
+
+{% block title %}🚀 Crypto Pro - Trading Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+               HEADER
+            ======================================== */
+    .header {
+        background: rgba(17, 25, 39, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 25px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: var(--shadow);
+    }
+    
+    .header-content {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .logo {
+        font-size: 26px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, var(--accent-orange), var(--accent-pink));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .logo i {
+        -webkit-text-fill-color: var(--accent-orange);
+        font-size: 30px;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+    }
+    
+    .header-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .user-info .username { font-weight: 700; font-size: 14px; }
+    .user-info .user-type {
+        font-size: 10px;
+        padding: 2px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+    .user-type.premium { background: var(--gradient-gold); color: #0a0e1a; }
+    .user-type.custom { background: var(--accent-blue); color: white; }
+    .user-type.simple { background: var(--text-muted); color: white; }
+    .user-type.admin { background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); color: white; }
+    
+    .btn-logout {
+        background: var(--accent-red);
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+    .btn-logout:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3); }
+    
+    /* ========================================
+               TABS
+            ======================================== */
+    .tabs {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 25px;
+        background: var(--bg-secondary);
+        padding: 6px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        padding: 10px 22px;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.4s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+    
+    .tab-btn:hover {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        transform: translateY(-2px);
+    }
+    
+    .tab-btn.active {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        color: white;
+        box-shadow: 0 4px 25px rgba(88, 166, 255, 0.3);
+    }
+    
+    .tab-content { display: none; animation: fadeInUp 0.4s ease; }
+    .tab-content.active { display: block; }
+    
+    /* ========================================
+               STATS
+            ======================================== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.4s;
+        box-shadow: var(--shadow);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent-blue);
+        box-shadow: var(--glow), var(--shadow);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    
+    .stat-icon.green { background: rgba(0, 212, 170, 0.15); color: var(--accent-green); }
+    .stat-icon.red { background: rgba(255, 107, 107, 0.15); color: var(--accent-red); }
+    .stat-icon.blue { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
+    .stat-icon.purple { background: rgba(188, 140, 255, 0.15); color: var(--accent-purple); }
+    
+    .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
+    .stat-value { font-size: 18px; font-weight: 900; }
+    
+    /* ========================================
+               FEAR & GREED - Charismatic Design
+            ======================================== */
+    .fear-greed-container {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px 25px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.5s ease;
+    }
+    
+    .fear-greed-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                    rgba(88, 166, 255, 0.03) 0%, transparent 70%);
+        pointer-events: none;
+        transition: background 0.3s ease;
+    }
+    
+    .fear-greed-container:hover {
+        border-color: rgba(88, 166, 255, 0.3);
+        box-shadow: 0 0 40px rgba(88, 166, 255, 0.1), var(--shadow);
+        transform: translateY(-2px);
+    }
+    
+    .fear-greed-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 16px;
+        z-index: 1;
+    }
+    
+    .fear-greed-title i {
+        color: var(--accent-orange);
+        font-size: 20px;
+    }
+    
+    .fear-greed-title .refresh-btn {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 4px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+        font-family: 'Vazirmatn', sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .fear-greed-title .refresh-btn:hover {
+        background: var(--accent-blue);
+        color: white;
+        border-color: var(--accent-blue);
+        transform: scale(1.05);
+    }
+    
+    .fear-greed-title .refresh-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .fear-greed-title .refresh-btn i {
+        color: inherit;
+        font-size: 12px;
+    }
+    
+    .fear-greed-value {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        flex-wrap: wrap;
+        z-index: 1;
+    }
+    
+    .fear-greed-meter-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 240px;
+    }
+    
+    .fear-greed-meter-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+    
+    .fear-greed-meter {
+        width: 100%;
+        height: 16px;
+        background: linear-gradient(to right, #ff0000, #ff6b00, #ffd700, #00d4aa, #00ff00);
+        border-radius: 8px;
+        position: relative;
+        overflow: visible;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .fear-greed-meter .fill {
+        height: 100%;
+        border-radius: 8px;
+        transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        background: linear-gradient(to right, rgba(255,255,255,0.3), transparent);
+        position: relative;
+    }
+    
+    .fear-greed-meter .pointer {
+        position: absolute;
+        top: -8px;
+        width: 24px;
+        height: 32px;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 0 30px rgba(255,255,255,0.4), 0 4px 15px rgba(0,0,0,0.3);
+        transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 2px solid var(--accent-blue);
+        z-index: 2;
+    }
+    
+    .fear-greed-meter .pointer::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid var(--accent-blue);
+    }
+    
+    .fear-greed-meter-values {
+        display: flex;
+        justify-content: space-between;
+        font-size: 9px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    
+    .fear-greed-label-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        min-width: 120px;
+    }
+    
+    .fear-greed-label {
+        font-size: 20px;
+        font-weight: 700;
+        padding: 6px 24px;
+        border-radius: 20px;
+        min-width: 120px;
+        text-align: center;
+        transition: all 0.5s ease;
+        letter-spacing: 0.5px;
+    }
+    
+    .fear-greed-label.extreme-fear {
+        background: rgba(255, 0, 0, 0.15);
+        color: #ff0000;
+        border: 2px solid rgba(255, 0, 0, 0.3);
+        box-shadow: 0 0 30px rgba(255, 0, 0, 0.1);
+    }
+    
+    .fear-greed-label.fear {
+        background: rgba(255, 107, 0, 0.15);
+        color: #ff6b00;
+        border: 2px solid rgba(255, 107, 0, 0.3);
+        box-shadow: 0 0 30px rgba(255, 107, 0, 0.1);
+    }
+    
+    .fear-greed-label.neutral {
+        background: rgba(255, 215, 0, 0.15);
+        color: #ffd700;
+        border: 2px solid rgba(255, 215, 0, 0.3);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+    }
+    
+    .fear-greed-label.greed {
+        background: rgba(0, 212, 170, 0.15);
+        color: #00d4aa;
+        border: 2px solid rgba(0, 212, 170, 0.3);
+        box-shadow: 0 0 30px rgba(0, 212, 170, 0.1);
+    }
+    
+    .fear-greed-label.extreme-greed {
+        background: rgba(0, 255, 0, 0.15);
+        color: #00ff00;
+        border: 2px solid rgba(0, 255, 0, 0.3);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+    }
+    
+    .fear-greed-value-text {
+        font-size: 14px;
+        color: var(--text-secondary);
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .fear-greed-update-time {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: 2px;
+    }
+    
+    /* ========================================
+               TABLE
+            ======================================== */
+    .table-container {
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    
+    .table-header {
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+    
+    .table-header h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 17px;
+        font-weight: 700;
+    }
+    
+    .table-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .search-input, .sort-select {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.3s;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+    
+    .search-input:focus, .sort-select:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
+    }
+    
+    .table-scroll { overflow-x: auto; }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    
+    thead { background: var(--bg-primary); }
+    
+    th {
+        padding: 12px 14px;
+        text-align: right;
+        font-weight: 700;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+        font-size: 12px;
+    }
+    
+    td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    
+    tr:hover { background: var(--bg-card-hover); }
+    .coin-name { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .coin-logo { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; }
+    .price-positive { color: var(--accent-green); font-weight: 700; }
+    .price-negative { color: var(--accent-red); font-weight: 700; }
+    .loading-row { text-align: center; padding: 40px !important; color: var(--text-secondary); }
+    
+    /* ========================================
+               ANALYSIS
+            ======================================== */
+    .analysis-container {
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 25px;
+        box-shadow: var(--shadow);
+    }
+    
+    .analysis-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .analysis-output {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        padding: 25px;
+        min-height: 350px;
+        border: 1px solid var(--border-color);
+        line-height: 2.2;
+        font-size: 15px;
+        text-align: right;
+        direction: rtl;
+    }
+    
+    /* ========================================
+               CHAT
+            ======================================== */
+    .chat-container {
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    
+    .chat-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-card);
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: var(--bg-primary);
+    }
+    
+    .message {
+        display: flex;
+        gap: 10px;
+        max-width: 85%;
+        animation: slideInRight 0.4s ease;
+    }
+    
+    .message.bot { align-self: flex-start; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    
+    .message-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .message.bot .message-avatar {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        color: white;
+    }
+    .message.user .message-avatar {
+        background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+        color: white;
+    }
+    
+    .message-content {
+        background: var(--bg-card);
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .message.user .message-content {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        border-color: transparent;
+        color: white;
+    }
+    
+    .message-text { line-height: 2; font-size: 14px; text-align: right; direction: rtl; white-space: pre-wrap; }
+    .message-text strong { color: var(--accent-orange); }
+    .message-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: left; }
+    
+    .chat-input-container {
+        padding: 12px 18px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 10px;
+        background: var(--bg-card);
+    }
+    
+    .chat-input {
+        flex: 1;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        outline: none;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+    
+    .chat-input:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
+    }
+    
+    .btn-send {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        color: white;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+    
+    .btn-send:hover { transform: scale(1.05); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .chat-tips {
+        padding: 8px 18px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+        font-size: 12px;
+        background: var(--bg-card);
+    }
+    
+    /* ========================================
+               LOCKED FEATURE
+            ======================================== */
+    .locked-feature {
+        background: rgba(255, 107, 107, 0.05);
+        border: 2px dashed rgba(255, 107, 107, 0.2);
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+    
+    .locked-feature i {
+        font-size: 56px;
+        color: var(--accent-orange);
+        display: block;
+        margin-bottom: 15px;
+    }
+    
+    .locked-feature h3 {
+        font-size: 22px;
+        margin-bottom: 10px;
+        color: var(--text-primary);
+    }
+    
+    .locked-feature .upgrade-btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 30px;
+        background: var(--gradient-gold);
+        color: #0a0e1a;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        font-family: 'Vazirmatn', sans-serif;
+        transition: all 0.4s;
+    }
+    
+    .locked-feature .upgrade-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3);
+    }
+    
+    /* ========================================
+               ADMIN MESSAGES
+            ======================================== */
+    .admin-messages {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .admin-messages .message-item {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 10px;
+        background: var(--bg-primary);
+        border-radius: 8px;
+    }
+    
+    .admin-messages .message-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    
+    .admin-messages .message-date {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+    
+    /* ========================================
+               RESPONSIVE
+            ======================================== */
+    @media (max-width: 768px) {
+        .header-content { flex-direction: column; align-items: stretch; gap: 10px; }
+        .header-controls { justify-content: center; flex-wrap: wrap; }
+        .tabs { gap: 3px; padding: 4px; }
+        .tab-btn { padding: 8px 12px; font-size: 12px; flex: 1; justify-content: center; }
+        .tab-btn span { display: none; }
+        .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { padding: 14px 16px; }
+        .stat-value { font-size: 16px; }
+        .table-header { flex-direction: column; align-items: stretch; }
+        .table-controls { flex-direction: column; }
+        .analysis-header { flex-direction: column; align-items: stretch; }
+        .chat-container { height: 450px; }
+        .message { max-width: 95%; }
+        .fear-greed-container { flex-direction: column; align-items: stretch; }
+        .fear-greed-value { justify-content: center; }
+        .fear-greed-meter-wrapper { min-width: 100%; }
+        .fear-greed-label-wrapper { min-width: 100%; }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .container { padding: 10px; }
+        .fear-greed-label { font-size: 16px; padding: 4px 16px; min-width: 80px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ===== HEADER ===== -->
+<header class="header">
+    <div class="header-content">
+        <div class="logo">
+            <i class="fas fa-rocket"></i>
+            <span>Crypto<span style="background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Pro</span></span>
+        </div>
+        <div class="header-controls">
+            <div class="user-info">
+                <i class="fas fa-user-circle" style="font-size:20px; color:var(--accent-blue);"></i>
+                <span class="username" id="usernameDisplay">User</span>
+                <span class="user-type" id="userTypeBadge">Simple</span>
+            </div>
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('admin_panel') }}" class="btn-primary" style="padding:6px 16px; font-size:13px;">
+                <i class="fas fa-crown"></i> Admin Panel
+            </a>
+            {% endif %}
+            <button class="btn-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- ===== TABS ===== -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+            <i class="fas fa-th-large"></i> <span>Dashboard</span>
+        </button>
+        <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">
+            <i class="fas fa-brain"></i> <span>Analysis</span>
+        </button>
+        <button class="tab-btn" data-tab="chat" onclick="switchTab('chat')">
+            <i class="fas fa-comments"></i> <span>Consultation</span>
+        </button>
+        <button class="tab-btn" data-tab="contact_admin" onclick="switchTab('contact_admin')">
+            <i class="fas fa-envelope"></i> <span>Message Admin</span>
+        </button>
+        <button class="tab-btn" data-tab="messages" onclick="switchTab('messages')">
+            <i class="fas fa-bell"></i> <span>Notifications</span>
+        </button>
+    </div>
+
+    <!-- ===== TAB 1: DASHBOARD ===== -->
+    <div id="dashboard" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-arrow-up"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Top Gainer</div>
+                    <div class="stat-value" id="topGainer" style="color:var(--accent-green);">-</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fas fa-arrow-down"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Top Loser</div>
+                    <div class="stat-value" id="topLoser" style="color:var(--accent-red);">-</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Average Price</div>
+                    <div class="stat-value" id="avgPrice">-</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-chart-pie"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">Market Health</div>
+                    <div class="stat-value" id="marketHealth">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Fear & Greed Index (Charismatic Design) ===== -->
+        <div class="fear-greed-container" id="fearGreedContainer">
+            <div class="fear-greed-title">
+                <i class="fas fa-chart-line"></i>
+                <span>Fear & Greed Index</span>
+                <span style="font-size:12px; color:var(--text-muted); font-weight:300;">(Fear & Greed Index)</span>
+                <button class="refresh-btn" onclick="fetchFearGreed()" title="Refresh">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="fear-greed-value">
+                <div class="fear-greed-meter-wrapper">
+                    <div class="fear-greed-meter-labels">
+                        <span>😱 Extreme Fear</span>
+                        <span>🤑 Extreme Greed</span>
+                    </div>
+                    <div class="fear-greed-meter">
+                        <div class="fill" id="fearGreedFill" style="width:50%;"></div>
+                        <div class="pointer" id="fearGreedPointer" style="left:50%;"></div>
+                    </div>
+                    <div class="fear-greed-meter-values">
+                        <span>0</span>
+                        <span>25</span>
+                        <span>50</span>
+                        <span>75</span>
+                        <span>100</span>
+                    </div>
+                </div>
+                <div class="fear-greed-label-wrapper">
+                    <span class="fear-greed-label neutral" id="fearGreedLabel">Loading...</span>
+                    <span class="fear-greed-value-text" id="fearGreedValue">-</span>
+                    <span class="fear-greed-update-time" id="fearGreedTime">Updating...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list" style="color:var(--accent-blue);"></i> Cryptocurrency List</h3>
+                <div class="table-controls">
+                    <input type="text" id="searchInput" placeholder="🔍 Search coin..." class="search-input">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="name">Sort by Name</option>
+                        <option value="price">Sort by Price</option>
+                        <option value="change_24h" selected>Sort by 24h Change</option>
+                        <option value="change_7d">Sort by 7d Change</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Coin Name</th>
+                            <th>Price (USD)</th>
+                            <th>1h Change</th>
+                            <th>24h Change</th>
+                            <th>7d Change</th>
+                            <th>Market Cap</th>
+                            <th>Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cryptoTableBody">
+                        <tr>
+                            <td colspan="8" class="loading-row">
+                                <i class="fas fa-spinner fa-spin"></i> Loading data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB 2: ANALYSIS ===== -->
+    <div id="analysis" class="tab-content">
+        <div class="analysis-container">
+            <div class="analysis-header">
+                <h3><i class="fas fa-brain" style="color:var(--accent-purple);"></i> Smart Market Analysis</h3>
+                <div class="analysis-controls">
+                    <select id="analysisType" class="sort-select">
+                        <option value="general">📊 General Analysis</option>
+                        <option value="technical">📈 Technical Analysis</option>
+                        <option value="fundamental">📋 Fundamental Analysis</option>
+                    </select>
+                    <button class="btn-primary" id="analyzeBtn" onclick="performAnalysis()">
+                        <i class="fas fa-wand-magic-sparkles"></i> Advanced Analysis
+                    </button>
+                </div>
+            </div>
+            <div class="analysis-output" id="analysisOutput">
+                <div style="text-align:center; color:var(--text-secondary); padding:40px 0;">
+                    <i class="fas fa-lightbulb" style="font-size:48px; color:var(--accent-orange); display:block; margin-bottom:15px;"></i>
+                    <p style="font-size:16px;">Click the "Advanced Analysis" button for a detailed analysis</p>
+                    <small style="color:var(--text-muted);">Analysis includes classification of coins across 5 timeframes with over 90% accuracy</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB 3: CHAT ===== -->
+    <div id="chat" class="tab-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3><i class="fas fa-robot" style="color:var(--accent-blue);"></i> AI Consultation</h3>
+                <span style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 16px; border-radius:20px; font-weight:600; color:var(--accent-green); background:rgba(0,212,170,0.1); border:1px solid rgba(0,212,170,0.2);">
+                    <span class="status-dot green"></span> Online
+                </span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            Hello! 👋
+                            I am your smart assistant. Feel free to ask anything. 🚀
+                        </div>
+                        <div class="message-time">Just now</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Ask your question..." class="chat-input">
+                <button class="btn-send" id="sendChatBtn" onclick="sendChatMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="chat-tips">
+                <i class="fas fa-info-circle" style="color:var(--accent-orange);"></i>
+                <span>For the best response, ask your question clearly</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB 4: Message Admin ===== -->
+    <div id="contact_admin" class="tab-content">
+        <div class="admin-messages">
+            <h3 style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-paper-plane" style="color:var(--accent-orange);"></i> Send Message to Admin
+            </h3>
+            
+            <div id="userChatMessages" class="user-chat-messages">
+                <div style="text-align:center; color:var(--text-secondary); padding:20px;">
+                    <i class="fas fa-inbox" style="font-size:30px; display:block; margin-bottom:10px;"></i>
+                    <p>No messages sent yet</p>
+                </div>
+            </div>
+            
+            <div style="background:var(--bg-card); border-radius:12px; padding:15px; border:1px solid var(--border-color);">
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                    <i class="fas fa-user-tag" style="color:var(--accent-blue);"></i>
+                    <span style="font-size:13px; color:var(--text-secondary);">Send to: <strong style="color:var(--text-primary);">Admin</strong></span>
+                    <span style="font-size:11px; padding:2px 12px; border-radius:12px; background:rgba(88,166,255,0.15); color:var(--accent-blue);">
+                        <span id="userTypeDisplayChat">Simple</span>
+                    </span>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="adminChatInput" placeholder="Write your message to the admin..." 
+                           style="flex:1; padding:12px 16px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:12px; color:var(--text-primary); font-size:14px; font-family:'Vazirmatn',sans-serif; outline:none;">
+                    <button class="btn-primary" id="sendAdminChatBtn" onclick="sendMessageToAdmin()" style="padding:12px 24px;">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+                <div id="chatPermissionMsg" class="chat-permission-msg denied">
+                    <i class="fas fa-info-circle"></i> 
+                    ⚠️ Only custom and premium users can send messages
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB 5: MESSAGES ===== -->
+    <div id="messages" class="tab-content">
+        <div class="admin-messages">
+            <h3 style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-bell" style="color:var(--accent-orange);"></i> Admin Notifications
+            </h3>
+            <div id="messagesList">
+                <div style="text-align:center; color:var(--text-secondary); padding:30px;">
+                    <i class="fas fa-inbox" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+                    <p>No notifications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========================================
+    // VARIABLES
+    // ========================================
+    let cryptoData = [];
+    let marketStats = {};
+    let chatHistory = [];
+    let userType = '{{ session.get("user_type", "simple") }}';
+    let isPremium = userType === 'premium';
+    let isCustom = userType === 'custom';
+    let isAdmin = '{{ session.get("role", "user") }}' === 'admin';
+    let canChat = isPremium || isCustom;
+    let canMessageAdmin = isPremium || isCustom;
+
+    // ========================================
+    // DOM ELEMENTS
+    // ========================================
+    const el = {
+        tableBody: document.getElementById('cryptoTableBody'),
+        topGainer: document.getElementById('topGainer'),
+        topLoser: document.getElementById('topLoser'),
+        avgPrice: document.getElementById('avgPrice'),
+        marketHealth: document.getElementById('marketHealth'),
+        searchInput: document.getElementById('searchInput'),
+        sortSelect: document.getElementById('sortSelect'),
+        analyzeBtn: document.getElementById('analyzeBtn'),
+        analysisType: document.getElementById('analysisType'),
+        analysisOutput: document.getElementById('analysisOutput'),
+        chatMessages: document.getElementById('chatMessages'),
+        chatInput: document.getElementById('chatInput'),
+        sendChatBtn: document.getElementById('sendChatBtn'),
+        usernameDisplay: document.getElementById('usernameDisplay'),
+        userTypeBadge: document.getElementById('userTypeBadge'),
+        messagesList: document.getElementById('messagesList'),
+        fearGreedFill: document.getElementById('fearGreedFill'),
+        fearGreedPointer: document.getElementById('fearGreedPointer'),
+        fearGreedLabel: document.getElementById('fearGreedLabel'),
+        fearGreedValue: document.getElementById('fearGreedValue'),
+        fearGreedTime: document.getElementById('fearGreedTime'),
+        adminChatInput: document.getElementById('adminChatInput'),
+        sendAdminChatBtn: document.getElementById('sendAdminChatBtn'),
+        userChatMessages: document.getElementById('userChatMessages'),
+        userTypeDisplayChat: document.getElementById('userTypeDisplayChat'),
+        chatPermissionMsg: document.getElementById('chatPermissionMsg'),
+    };
+
+    // ========================================
+    // AUTH
+    // ========================================
+    async function logout() {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    }
+
+    // ========================================
+    // TAB SWITCHING
+    // ========================================
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        const btn = document.querySelector(`[data-tab="${tabId}"]`);
+        if (btn) btn.classList.add('active');
+
+        const content = document.getElementById(tabId);
+        if (content) content.classList.add('active');
+    }
+
+    // ========================================
+    // FETCH MARKET DATA
+    // ========================================
+    async function fetchMarketData() {
+        try {
+            const response = await fetch('/api/crypto');
+            const data = await response.json();
+
+            if (data.data && data.data.length > 0) {
+                cryptoData = data.data;
+                marketStats = data.stats || {};
+                updateTable(cryptoData);
+                updateStats(marketStats);
+                console.log('✅ Market data received:', cryptoData.length, 'coins');
+            }
+        } catch (error) {
+            console.error('❌ Error fetching data:', error);
+        }
+    }
+
+    // ========================================
+    // FETCH FEAR & GREED (with cache-busting)
+    // ========================================
+    async function fetchFearGreed() {
+        try {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/fear-greed?_=${timestamp}`, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+            const data = await response.json();
+            
+            console.log('📊 Fear & Greed data received:', data);
+            
+            if (data && data.value) {
+                updateFearGreed(data);
+                // Update time
+                const now = new Date();
+                el.fearGreedTime.textContent = `Last updated: ${now.toLocaleTimeString('en-US')}`;
+            } else {
+                console.warn('⚠️ Fear & Greed data is not valid');
+                el.fearGreedTime.textContent = '⚠️ Data error';
+            }
+        } catch (error) {
+            console.error('❌ Error fetching fear & greed:', error);
+            el.fearGreedTime.textContent = '❌ Server connection error';
+        }
+    }
+
+    // ========================================
+    // UPDATE FEAR & GREED
+    // ========================================
+    function updateFearGreed(data) {
+        const value = data.value || 50;
+        const percent = Math.min(Math.max(value, 0), 100);
+        
+        // Update meter and pointer with animation
+        el.fearGreedFill.style.width = percent + '%';
+        el.fearGreedPointer.style.left = percent + '%';
+        
+        // Set class and text
+        let labelClass = 'neutral';
+        let labelText = data.classification || 'Neutral';
+        let emoji = '😐';
+        
+        if (value < 25) { 
+            labelClass = 'extreme-fear'; 
+            labelText = 'Extreme Fear'; 
+            emoji = '😱';
+        }
+        else if (value < 45) { 
+            labelClass = 'fear'; 
+            labelText = 'Fear'; 
+            emoji = '😰';
+        }
+        else if (value < 55) { 
+            labelClass = 'neutral'; 
+            labelText = 'Neutral'; 
+            emoji = '😐';
+        }
+        else if (value < 75) { 
+            labelClass = 'greed'; 
+            labelText = 'Greed'; 
+            emoji = '😏';
+        }
+        else { 
+            labelClass = 'extreme-greed'; 
+            labelText = 'Extreme Greed'; 
+            emoji = '🤑';
+        }
+        
+        el.fearGreedLabel.className = `fear-greed-label ${labelClass}`;
+        el.fearGreedLabel.textContent = `${emoji} ${labelText}`;
+        el.fearGreedValue.textContent = `${value}/100`;
+    }
+
+    // ========================================
+    // UPDATE TABLE
+    // ========================================
+    function updateTable(data) {
+        if (!data || data.length === 0) {
+            el.tableBody.innerHTML = `
+                <tr><td colspan="8" class="loading-row">
+                    <i class="fas fa-exclamation-circle"></i> No data to display
+                </td></tr>
+            `;
+            return;
+        }
+
+        const searchTerm = el.searchInput.value.toLowerCase();
+        const sortBy = el.sortSelect.value;
+
+        let filteredData = data.filter(coin => 
+            coin.name.toLowerCase().includes(searchTerm)
+        );
+
+        filteredData.sort((a, b) => {
+            let valA, valB;
+            if (sortBy === 'name') {
+                valA = a.name;
+                valB = b.name;
+                return valA.localeCompare(valB);
+            } else if (sortBy === 'price') {
+                valA = parseFloat(a.price.replace(/[$,]/g, '')) || 0;
+                valB = parseFloat(b.price.replace(/[$,]/g, '')) || 0;
+                return valB - valA;
+            } else {
+                valA = a[sortBy] || 0;
+                valB = b[sortBy] || 0;
+                return valB - valA;
+            }
+        });
+
+        let html = '';
+        filteredData.forEach((coin, index) => {
+            const change1h = coin.change_1h || 0;
+            const change24h = coin.change_24h || 0;
+            const change7d = coin.change_7d || 0;
+            
+            const logoHtml = coin.image ? 
+                `<img src="${coin.image}" alt="${coin.name}" class="coin-logo" onerror="this.style.display='none'">` :
+                `<span style="width:24px; height:24px; display:flex; align-items:center; justify-content:center; background:var(--bg-card); border-radius:50%; font-size:10px;">${coin.symbol ? coin.symbol.substring(0,2) : '??'}</span>`;
+
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td class="coin-name">
+                        ${logoHtml}
+                        <span>${coin.name}</span>
+                        <span style="color:var(--text-muted); font-size:11px;">${coin.symbol || ''}</span>
+                    </td>
+                    <td>${coin.price}</td>
+                    <td class="${change1h >= 0 ? 'price-positive' : 'price-negative'}">
+                        ${change1h >= 0 ? '▲' : '▼'} ${Math.abs(change1h).toFixed(2)}%
+                    </td>
+                    <td class="${change24h >= 0 ? 'price-positive' : 'price-negative'}">
+                        ${change24h >= 0 ? '▲' : '▼'} ${Math.abs(change24h).toFixed(2)}%
+                    </td>
+                    <td class="${change7d >= 0 ? 'price-positive' : 'price-negative'}">
+                        ${change7d >= 0 ? '▲' : '▼'} ${Math.abs(change7d).toFixed(2)}%
+                    </td>
+                    <td>${coin.market_cap || '-'}</td>
+                    <td>${coin.volume || '-'}</td>
+                </tr>
+            `;
+        });
+
+        el.tableBody.innerHTML = html || `
+            <tr><td colspan="8" class="loading-row">
+                <i class="fas fa-search"></i> No coins found
+            </td></tr>
+        `;
+    }
+
+    // ========================================
+    // UPDATE STATS
+    // ========================================
+    function updateStats(stats) {
+        if (!stats) return;
+
+        if (stats.top_gainer) {
+            el.topGainer.textContent = `${stats.top_gainer.name} (+${stats.top_gainer.change_24h?.toFixed(2) || 0}%)`;
+        }
+
+        if (stats.top_loser) {
+            el.topLoser.textContent = `${stats.top_loser.name} (${stats.top_loser.change_24h?.toFixed(2) || 0}%)`;
+        }
+
+        if (stats.avg_price) {
+            el.avgPrice.textContent = `$${stats.avg_price.toFixed(2)}`;
+        }
+
+        const positiveCoins = cryptoData.filter(c => c.change_24h > 0).length;
+        const ratio = cryptoData.length > 0 ? positiveCoins / cryptoData.length : 0;
+
+        let status = '🟡 Neutral';
+        if (ratio > 0.7) status = '🟢 Strong Bullish';
+        else if (ratio > 0.5) status = '🟢 Weak Bullish';
+        else if (ratio > 0.3) status = '🔴 Weak Bearish';
+        else status = '🔴 Strong Bearish';
+
+        el.marketHealth.textContent = status;
+    }
+
+    // ========================================
+    // PERFORM ANALYSIS
+    // ========================================
+    async function performAnalysis() {
+        if (!isPremium && !isCustom) {
+            el.analysisOutput.innerHTML = `
+                <div class="locked-feature">
+                    <i class="fas fa-crown"></i>
+                    <h3>👑 Please upgrade your account</h3>
+                    <p>You need a premium or custom account to access advanced smart analysis.</p>
+                    <p style="font-size:13px; color:var(--text-muted); margin-top:5px;">
+                        Upgrade to access all advanced features
+                    </p>
+                    <button class="upgrade-btn" onclick="window.location.href='/'">
+                        <i class="fas fa-arrow-up"></i> Upgrade Account
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const type = el.analysisType.value;
+        el.analyzeBtn.disabled = true;
+        el.analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+        el.analysisOutput.innerHTML = `
+            <div style="text-align:center; padding:40px;">
+                <div style="width:40px; height:40px; border:4px solid var(--border-color); border-top-color: var(--accent-blue); border-radius:50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top:15px; color:var(--text-secondary);">🧠 Analyzing...</p>
+            </div>
+            <style>
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: '', type: type })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.analysis) {
+                const formattedText = result.analysis
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                el.analysisOutput.innerHTML = `
+                    <div style="direction: rtl; text-align: right;">
+                        ${formattedText}
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 12px;">
+                            <i class="fas fa-clock"></i> ${new Date().toLocaleString('en-US')}
+                        </div>
+                        <div style="margin-top: 10px; padding: 12px; background: rgba(255, 169, 77, 0.1); border-radius: 10px; color: var(--accent-orange); font-size: 13px; text-align: center;">
+                            ⚠️ The market always carries risks
+                        </div>
+                    </div>
+                `;
+            } else {
+                el.analysisOutput.innerHTML = `
+                    <div style="color: var(--accent-red); padding: 20px; text-align: center;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:30px;"></i>
+                        <p>${result.error || 'Analysis error'}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            el.analysisOutput.innerHTML = `
+                <div style="color: var(--accent-red); padding: 20px; text-align: center;">
+                    <i class="fas fa-exclamation-circle" style="font-size:30px;"></i>
+                    <p>Server connection error</p>
+                </div>
+            `;
+        } finally {
+            el.analyzeBtn.disabled = false;
+            el.analyzeBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Advanced Analysis';
+        }
+    }
+
+    // ========================================
+    // CHAT WITH AI
+    // ========================================
+    async function sendChatMessage() {
+        if (!canChat) {
+            addMessageToChat('👑 Please upgrade your account to use AI consultation.', 'bot');
+            return;
+        }
+
+        const message = el.chatInput.value.trim();
+        if (!message) return;
+
+        addMessageToChat(message, 'user');
+        el.chatInput.value = '';
+        el.sendChatBtn.disabled = true;
+
+        const typingId = addTypingIndicator();
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, history: chatHistory })
+            });
+
+            const result = await response.json();
+            removeTypingIndicator(typingId);
+
+            if (response.ok && result.response) {
+                const formattedResponse = result.response
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                addMessageToChat(formattedResponse, 'bot');
+                chatHistory.push({ type: 'user', content: message });
+                chatHistory.push({ type: 'bot', content: result.response });
+            } else {
+                addMessageToChat(`❌ ${result.error || 'Error receiving response'}`, 'bot');
+            }
+        } catch (error) {
+            removeTypingIndicator(typingId);
+            addMessageToChat(`❌ Server connection error`, 'bot');
+        } finally {
+            el.sendChatBtn.disabled = false;
+            el.chatInput.focus();
+        }
+    }
+
+    // ========================================
+    // CHAT HELPERS
+    // ========================================
+    function addMessageToChat(text, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        const avatarIcon = type === 'bot' ? 'fa-robot' : 'fa-user';
+
+        messageDiv.innerHTML = `
+            <div class="message-avatar"><i class="fas ${avatarIcon}"></i></div>
+            <div class="message-content">
+                <div class="message-text">${text}</div>
+                <div class="message-time">${new Date().toLocaleTimeString('en-US')}</div>
+            </div>
+        `;
+
+        el.chatMessages.appendChild(messageDiv);
+        el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        const id = 'typing-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'message bot';
+        div.innerHTML = `
+            <div class="message-avatar"><i class="fas fa-robot"></i></div>
+            <div class="message-content">
+                <div class="message-text" style="color: var(--text-secondary);">
+                    <i class="fas fa-spinner fa-spin"></i> Typing...
+                </div>
+            </div>
+        `;
+        el.chatMessages.appendChild(div);
+        el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
+        return id;
+    }
+
+    function removeTypingIndicator(id) {
+        const element = document.getElementById(id);
+        if (element) element.remove();
+    }
+
+    // ========================================
+    // Send Message to Admin
+    // ========================================
+    async function sendMessageToAdmin() {
+        if (!canMessageAdmin) {
+            alert('⚠️ Only custom and premium users can send messages');
+            return;
+        }
+
+        const message = el.adminChatInput.value.trim();
+        if (!message) {
+            alert('⚠️ Please enter your message');
+            return;
+        }
+
+        const sendBtn = el.sendAdminChatBtn;
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            const response = await fetch('/api/user/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                el.adminChatInput.value = '';
+                alert('✅ Your message was sent successfully');
+                await loadUserChatHistory();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Error sending message'));
+            }
+        } catch (error) {
+            console.error('Send message error:', error);
+            alert('❌ Server connection error. Please try again.');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+        }
+    }
+
+    // ========================================
+    // Load Message History
+    // ========================================
+    async function loadUserChatHistory() {
+        try {
+            const response = await fetch('/api/user/messages-history');
+            const data = await response.json();
+
+            if (response.ok && data.messages) {
+                renderUserChatHistory(data.messages);
+            }
+        } catch (error) {
+            console.error('Load chat history error:', error);
+        }
+    }
+
+    function renderUserChatHistory(messages) {
+        const container = el.userChatMessages;
+        
+        if (!messages || messages.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; color:var(--text-secondary); padding:20px;">
+                    <i class="fas fa-inbox" style="font-size:30px; display:block; margin-bottom:10px;"></i>
+                    <p>No messages sent yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        messages.forEach(msg => {
+            const isFromUser = msg.from_admin == 0;
+            const senderClass = isFromUser ? 'user' : 'admin';
+            const senderName = isFromUser ? 'You' : 'Admin';
+            const icon = isFromUser ? 'fa-user' : 'fa-shield-alt';
+
+            html += `
+                <div class="msg-item ${senderClass}">
+                    <div class="msg-bubble">
+                        <div class="msg-sender">
+                            <i class="fas ${icon}"></i>
+                            <span>${senderName}</span>
+                        </div>
+                        <div class="msg-text">${msg.message}</div>
+                        <div class="msg-time">${new Date(msg.created_at).toLocaleString('en-US')}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // ========================================
+    // Update User Status in Chat
+    // ========================================
+    function updateChatUserType() {
+        const userType = '{{ session.get("user_type", "simple") }}';
+        const display = el.userTypeDisplayChat;
+        const permissionMsg = el.chatPermissionMsg;
+        const sendBtn = el.sendAdminChatBtn;
+        const input = el.adminChatInput;
+
+        if (userType === 'custom') {
+            display.textContent = '⭐ Custom';
+            permissionMsg.innerHTML = '<i class="fas fa-check-circle"></i> ✅ You can send messages';
+            permissionMsg.className = 'chat-permission-msg allowed';
+            sendBtn.disabled = false;
+            input.disabled = false;
+        } else if (userType === 'premium') {
+            display.textContent = '👑 Premium';
+            permissionMsg.innerHTML = '<i class="fas fa-check-circle"></i> ✅ You can send messages';
+            permissionMsg.className = 'chat-permission-msg allowed';
+            sendBtn.disabled = false;
+            input.disabled = false;
+        } else {
+            display.textContent = 'Simple';
+            permissionMsg.innerHTML = '<i class="fas fa-info-circle"></i> ⚠️ Only custom and premium users can send messages';
+            permissionMsg.className = 'chat-permission-msg denied';
+            sendBtn.disabled = true;
+            input.disabled = true;
+            input.placeholder = 'You do not have permission to send messages';
+        }
+    }
+
+    // ========================================
+    // FETCH ADMIN MESSAGES
+    // ========================================
+    async function fetchAdminMessages() {
+        try {
+            const response = await fetch('/api/user/messages');
+            const data = await response.json();
+
+            if (data.messages && data.messages.length > 0) {
+                let html = '';
+                data.messages.forEach(msg => {
+                    html += `
+                        <div class="message-item">
+                            <div>${msg.message}</div>
+                            <div class="message-date">${new Date(msg.created_at).toLocaleString('en-US')}</div>
+                        </div>
+                    `;
+                });
+                el.messagesList.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Error fetching admin messages:', error);
+        }
+    }
+
+    // ========================================
+    // UPDATE USER INFO
+    // ========================================
+    function updateUserInfo() {
+        const username = '{{ session.get("username", "User") }}';
+        const userType = '{{ session.get("user_type", "simple") }}';
+        const role = '{{ session.get("role", "user") }}';
+
+        el.usernameDisplay.textContent = username;
+
+        if (role === 'admin') {
+            el.userTypeBadge.textContent = '👑 Admin';
+            el.userTypeBadge.className = 'user-type admin';
+        } else if (userType === 'premium') {
+            el.userTypeBadge.textContent = '👑 Premium';
+            el.userTypeBadge.className = 'user-type premium';
+        } else if (userType === 'custom') {
+            el.userTypeBadge.textContent = '⭐ Custom';
+            el.userTypeBadge.className = 'user-type custom';
+        } else {
+            el.userTypeBadge.textContent = 'Simple';
+            el.userTypeBadge.className = 'user-type simple';
+        }
+    }
+
+    // ========================================
+    // EVENT LISTENERS
+    // ========================================
+    el.searchInput.addEventListener('input', () => {
+        if (cryptoData.length > 0) updateTable(cryptoData);
+    });
+
+    el.sortSelect.addEventListener('change', () => {
+        if (cryptoData.length > 0) updateTable(cryptoData);
+    });
+
+    el.chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+
+    el.adminChatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessageToAdmin();
+        }
+    });
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    updateUserInfo();
+    updateChatUserType();
+    fetchMarketData();
+    fetchFearGreed();
+    fetchAdminMessages();
+    loadUserChatHistory();
+
+    // Auto-update every 30 seconds
+    setInterval(() => {
+        fetchMarketData();
+        fetchFearGreed();
+        loadUserChatHistory();
+    }, 30000);
+
+    // Auto-analyze for premium or custom users
+    if (isPremium || isCustom) {
+        setTimeout(() => {
+            performAnalysis();
+        }, 3000);
+    }
+
+    console.log('🚀 Crypto Pro loaded successfully!');
+    console.log(`📌 User type: ${isPremium ? '👑 Premium' : isCustom ? '⭐ Custom' : 'Simple'}`);
+    console.log('💡 Data updates every 30 seconds');
+</script>
+{% endblock %}
