@@ -1083,7 +1083,7 @@ def test_api():
                 {'role': 'user', 'content': test_message}
             ],
             'temperature': 0.7,
-            'max_tokens': 1000000
+            'max_tokens': 8192
         }
         
         start_time = time.time()
@@ -1160,7 +1160,7 @@ def analyze():
             {'role': 'user', 'content': prompt_data['user']}
         ]
         
-        response = call_ai_api(messages, temperature=0.7, max_tokens=400000)
+        response = call_ai_api(messages, temperature=0.7, max_tokens=8192)
         return jsonify({'analysis': response, 'type': analysis_type})
         
     except Exception as e:
@@ -1196,7 +1196,7 @@ def chat():
         
         messages.append({'role': 'user', 'content': user_message})
         
-        response = call_ai_api(messages, temperature=0.8, max_tokens=200000)
+        response = call_ai_api(messages, temperature=0.8, max_tokens=8192)
         
         user = db.get_user_by_username(session['username'])
         if user:
